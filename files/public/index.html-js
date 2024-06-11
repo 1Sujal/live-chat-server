@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Real-Time Chat</title>
+    <style>
+        #chat {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #message {
+            width: calc(100% - 60px);
+        }
+    </style>
+</head>
+<body>
+    <div id="chat"></div>
+    <input id="username" type="text" placeholder="Username" />
+    <input id="message" type="text" placeholder="Message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const chat = document.getElementById("chat");
+        const usernameInput = document.getElementById("username");
+        const messageInput = document.getElementById("message");
+
+        const ws = new WebSocket("ws://" + window.location.host + "/ws");
+
+        ws.onopen = function(event) {
+            console.log("Connected to WebSocket server");
+        };
+
+        ws.onerror = function(error) {
+            console.error("WebSocket error observed:", error);
+        };
+
+        ws.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            console.log("Received message:", msg);
+            const message = document.createElement("div");
+            message.innerHTML = `<strong>${msg.username}</strong>: ${msg.message}`;
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;  // Auto-scroll to the latest message
+        };
+
+        function sendMessage() {
+            const message = {
+                username: usernameInput.value,
+                message: messageInput.value,
+            };
+            console.log("Sending message:", message);
+            ws.send(JSON.stringify(message));
+            messageInput.value = "";
+        }
+    </script>
+</body>
+</html>
